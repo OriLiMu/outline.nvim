@@ -38,8 +38,26 @@ function M.handle_markdown()
   local level_symbols = { { children = {} } }
   local max_level = 1
   local is_inside_code_block = false
+  local is_inside_yaml_frontmatter = false
+  local yaml_start_found = false
 
   for line, value in ipairs(lines) do
+    -- 检测 YAML 前置元数据的开始和结束
+    if line == 1 and value:match("^%-%-%-%s*$") then
+      is_inside_yaml_frontmatter = true
+      yaml_start_found = true
+      goto nextline
+    end
+
+    if yaml_start_found and value:match("^%-%-%-%s*$") then
+      is_inside_yaml_frontmatter = false
+      goto nextline
+    end
+
+    if is_inside_yaml_frontmatter then
+      goto nextline
+    end
+
     if string.find(value, '^```') then
       is_inside_code_block = not is_inside_code_block
     end
